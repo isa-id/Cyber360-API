@@ -1,64 +1,64 @@
-using backend.Models;
-using Microsoft.EntityFrameworkCore;
-using backend.Services;
-using backend.Configurations;
+    using backend.Models;
+    using Microsoft.EntityFrameworkCore;
+    using backend.Services;
+    using backend.Configurations;
 
-namespace backend
-{
-    public class Program
+    namespace backend
     {
-        public static void Main(string[] args)
+        public class Program
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Configurar cadena de conexi�n a la base de datos remota (Neon)
-            builder.Services.AddDbContext<NeondbContext>(options =>
+            public static void Main(string[] args)
             {
-                var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-                options.UseNpgsql(connectionString);
-            }
-            );
+                var builder = WebApplication.CreateBuilder(args);
 
-            // Habilitar CORS (opcional pero �til si accedes desde Flutter)
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAll", policy =>
+                // Configurar cadena de conexi�n a la base de datos remota (Neon)
+                builder.Services.AddDbContext<NeondbContext>(options =>
                 {
-                    policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+                    options.UseNpgsql(connectionString);
+                }
+                );
+
+                // Habilitar CORS (opcional pero �til si accedes desde Flutter)
+                builder.Services.AddCors(options =>
+                {
+                    options.AddPolicy("AllowAll", policy =>
+                    {
+                        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                    });
                 });
-            });
 
-            // Agregar servicios necesarios
-            builder.Services.AddControllers();
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-            builder.Services.AddScoped<IMailService, MailService>();
+                // Agregar servicios necesarios
+                builder.Services.AddControllers();
+                builder.Services.AddEndpointsApiExplorer();
+                builder.Services.AddSwaggerGen();
+                builder.Services.AddScoped<IMailService, MailService>();
 
-            builder.Services.AddControllers()
-    .AddJsonOptions(x =>
-        x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
-            builder.Services.Configure<MailSettings>(
-                builder.Configuration.GetSection("MailSettings"));
-            builder.Services.AddTransient<IMailService, MailService>();
+                builder.Services.AddControllers()
+        .AddJsonOptions(x =>
+            x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
+                builder.Services.Configure<MailSettings>(
+                    builder.Configuration.GetSection("MailSettings"));
+                builder.Services.AddTransient<IMailService, MailService>();
 
 
-            var app = builder.Build();
+                var app = builder.Build();
 
-            // Configurar el pipeline HTTP
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                // Configurar el pipeline HTTP
+                if (app.Environment.IsDevelopment())
+                {
+                    app.UseSwagger();
+                    app.UseSwaggerUI();
+                }
+
+                app.UseCors("AllowAll");
+
+                app.UseHttpsRedirection();
+                app.UseAuthorization();
+
+                app.MapControllers();
+
+                app.Run();
             }
-
-            app.UseCors("AllowAll");
-
-            app.UseHttpsRedirection();
-            app.UseAuthorization();
-
-            app.MapControllers();
-
-            app.Run();
         }
     }
-}
