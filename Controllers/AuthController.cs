@@ -75,21 +75,48 @@ namespace backend.Controllers
         }
 
         [HttpPost("verify-code")]
-public async Task<IActionResult> VerifyCode([FromBody] VerifyCodeRequest request)
-{
-    var usuario = await _context.Usuario.FirstOrDefaultAsync(u => u.Email == request.Email);
+        public async Task<IActionResult> VerifyCode([FromBody] VerifyCodeRequest request)
+        {
+            var usuario = await _context.Usuario.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-    if (usuario == null)
-        return Unauthorized(new { message = "Código inválido o expirado." });
+            if (usuario == null)
+                return Unauthorized(new { message = "Código inválido o expirado." });
 
-    var ahora = DateTime.UtcNow;
+            var ahora = DateTime.UtcNow;
 
-    if (usuario.CodigoRecuperacion != request.Codigo || usuario.CodigoExpira == null || ahora > usuario.CodigoExpira)
-    {
-        return Unauthorized(new { message = "Código inválido o expirado." });
-    }
+            if (usuario.CodigoRecuperacion != request.Codigo || usuario.CodigoExpira == null || ahora > usuario.CodigoExpira)
+            {
+                return Unauthorized(new { message = "Código inválido o expirado." });
+            }
 
-    return Ok(new { message = "Código válido. Proceda a cambiar su contraseña." });
-}
+            return Ok(new { message = "Código válido. Proceda a cambiar su contraseña." });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var usuario = await _context.Usuario.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+            if (usuario == null)
+                return Unauthorized(new { message = "Usuario no encontrado." });
+
+            var ahora = DateTime.UtcNow;
+
+            if (usuario.CodigoExpira == null || ahora > usuario.CodigoExpira)
+                return Unauthorized(new { message = "El código ya expiró." });
+
+            // Hashear la nueva contraseña
+            var hash = BCrypt.Net.BCrypt.HashPassword(request.NuevaContrasena);
+            usuario.Contrasena = hash;
+
+            // Limpiar el código y expiración
+            usuario.CodigoRecuperacion = null;
+            usuario.CodigoExpira = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Contraseña restablecida exitosamente." });
+        }
+
     }
 }
