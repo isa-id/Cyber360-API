@@ -1,0 +1,77 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using backend.Models;
+using backend.Services;
+using Cyber360.DTOs;
+
+namespace backend.Controllers
+{
+    [ApiController]
+    [Route("auth")]
+    public class AuthController : ControllerBase
+    {
+        private readonly NeondbContext _context;
+        private readonly IMailService _mailService;
+
+        public AuthController(NeondbContext context, IMailService mailService)
+        {
+            _context = context;
+            _mailService = mailService;
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            var usuario = await _context.Usuario
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+            if (usuario == null)
+                return Unauthorized(new { message = "Correo o contraseña incorrectos." });
+
+            var hash = usuario.Contrasena;
+            bool contraseñaValida;
+
+            if (hash.StartsWith("$2a$") || hash.StartsWith("$2b$") || hash.StartsWith("$2y$"))
+            {
+                contraseñaValida = BCrypt.Net.BCrypt.Verify(request.Contrasena, hash);
+            }
+            else
+            {
+                contraseñaValida = request.Contrasena == hash;
+            }
+
+            if (!contraseñaValida)
+                return Unauthorized(new { message = "Correo o contraseña incorrectos." });
+
+            return Ok(new
+            {
+                message = "Inicio de sesión exitoso",
+                usuario.IdUsuario,
+                usuario.Nombre,
+                usuario.Email,
+                usuario.FkRol
+            });
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            var usuario = await _context.Usuario.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+            // Mensaje genérico por seguridad
+            if (usuario == null)
+                return Ok(new { message = "Si el correo está registrado, se enviará un código." });
+
+            // Generar código de 6 dígitos
+            var codigo = new Random().Next(100000, 999999).ToString();
+
+            usuario.CodigoRecuperacion = codigo;
+            usuario.CodigoExpira = DateTime.UtcNow.AddMinutes(10);
+
+            await _context.SaveChangesAsync();
+            await _mailService.SendPasswordResetCode(usuario.Email, usuario.Nombre, codigo);
+
+            return Ok(new { message = "Si el correo está registrado, se enviará un código." });
+        }
+    }
+}

@@ -1,5 +1,6 @@
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
+using backend.Services;
 
 namespace backend
 {
@@ -9,7 +10,7 @@ namespace backend
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Configurar cadena de conexión a la base de datos remota (Neon)
+            // Configurar cadena de conexiï¿½n a la base de datos remota (Neon)
             builder.Services.AddDbContext<NeondbContext>(options =>
             {
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -17,7 +18,7 @@ namespace backend
             }
             );
 
-            // Habilitar CORS (opcional pero útil si accedes desde Flutter)
+            // Habilitar CORS (opcional pero ï¿½til si accedes desde Flutter)
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll", policy =>
@@ -30,6 +31,7 @@ namespace backend
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddScoped<IMailService, MailService>();
 
             var app = builder.Build();
 

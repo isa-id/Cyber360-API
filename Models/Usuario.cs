@@ -23,5 +23,9 @@ public partial class Usuario
 
     public string Nombre { get; set; } = null!;
 
+    public string? CodigoRecuperacion { get; set; }
+
+    public DateTime? CodigoExpira { get; set; }
+    
     public virtual Role FkRolNavigation { get; set; } = null!;
 }
