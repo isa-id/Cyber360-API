@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -24,8 +24,6 @@ namespace backend.Controllers
         {
             return await _context.Ventas
                 .Include(v => v.FkClienteNavigation)
-                .Include(v => v.Ventaxproductos)
-                    .ThenInclude(vxp => vxp.FkProductoNavigation)
                 .ToListAsync();
         }
 
@@ -35,13 +33,11 @@ namespace backend.Controllers
         {
             var venta = await _context.Ventas
                 .Include(v => v.FkClienteNavigation)
-                .Include(v => v.Ventaxproductos)
-                    .ThenInclude(vxp => vxp.FkProductoNavigation)
                 .FirstOrDefaultAsync(v => v.IdVenta == id);
 
             if (venta == null)
             {
-                return NotFound(new { message = $"Venta con ID {id} no encontrada" });
+                return NotFound();
             }
 
             return venta;
@@ -49,85 +45,30 @@ namespace backend.Controllers
 
         // POST: api/Ventas
         [HttpPost]
-        public async Task<ActionResult<Venta>> PostVenta([FromBody] Venta venta)
+        public async Task<ActionResult<Venta>> PostVenta(Venta venta)
         {
-            // Validación básica
-            if (venta == null)
-            {
-                return BadRequest(new { message = "El objeto Venta no puede ser nulo" });
-            }
+            _context.Ventas.Add(venta);
+            await _context.SaveChangesAsync();
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            // Verificar que el cliente existe
-            var clienteExists = await _context.Clientes.AnyAsync(c => c.IdCliente == venta.FkCliente);
-            if (!clienteExists)
-            {
-                return BadRequest(new { message = "El cliente especificado no existe" });
-            }
-
-            try
-            {
-                // Asegurar que no se envíe un ID (autogenerado)
-                venta.IdVenta = 0;
-
-                _context.Ventas.Add(venta);
-                await _context.SaveChangesAsync();
-
-                return CreatedAtAction(nameof(GetVenta), new { id = venta.IdVenta }, venta);
-            }
-            catch (DbUpdateException ex)
-            {
-                return StatusCode(500, new { message = "Error al crear la venta", error = ex.InnerException?.Message });
-            }
+            return CreatedAtAction(nameof(GetVenta), new { id = venta.IdVenta }, venta);
         }
 
         // PUT: api/Ventas/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutVenta(int id, [FromBody] Venta venta)
+        public async Task<IActionResult> PutVenta(int id, Venta venta)
         {
             if (id != venta.IdVenta)
             {
-                return BadRequest(new { message = "ID de la venta no coincide" });
+                return BadRequest();
             }
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            // Verificar que existe
-            var ventaExistente = await _context.Ventas.FindAsync(id);
-            if (ventaExistente == null)
-            {
-                return NotFound(new { message = $"Venta con ID {id} no encontrada" });
-            }
-
-            // Verificar que el cliente existe
-            var clienteExists = await _context.Clientes.AnyAsync(c => c.IdCliente == venta.FkCliente);
-            if (!clienteExists)
-            {
-                return BadRequest(new { message = "El cliente especificado no existe" });
-            }
+            _context.Entry(venta).State = EntityState.Modified;
 
             try
             {
-                // Actualizar propiedades
-                ventaExistente.FkCliente = venta.FkCliente;
-                ventaExistente.Fecha = venta.Fecha;
-                ventaExistente.MetodoPago = venta.MetodoPago;
-                ventaExistente.Estado = venta.Estado;
-                ventaExistente.Total = venta.Total;
-
-                _context.Entry(ventaExistente).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-
-                return NoContent();
             }
-            catch (DbUpdateConcurrencyException ex)
+            catch (DbUpdateConcurrencyException)
             {
                 if (!VentaExists(id))
                 {
@@ -135,9 +76,11 @@ namespace backend.Controllers
                 }
                 else
                 {
-                    return StatusCode(500, new { message = "Error de concurrencia al actualizar la venta", error = ex.Message });
+                    throw;
                 }
             }
+
+            return NoContent();
         }
 
         // DELETE: api/Ventas/5
@@ -147,20 +90,13 @@ namespace backend.Controllers
             var venta = await _context.Ventas.FindAsync(id);
             if (venta == null)
             {
-                return NotFound(new { message = $"Venta con ID {id} no encontrada" });
+                return NotFound();
             }
 
-            try
-            {
-                _context.Ventas.Remove(venta);
-                await _context.SaveChangesAsync();
+            _context.Ventas.Remove(venta);
+            await _context.SaveChangesAsync();
 
-                return NoContent();
-            }
-            catch (DbUpdateException ex)
-            {
-                return StatusCode(500, new { message = "Error al eliminar la venta", error = ex.InnerException?.Message });
-            }
+            return NoContent();
         }
 
         private bool VentaExists(int id)
