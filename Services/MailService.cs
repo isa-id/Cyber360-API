@@ -17,7 +17,8 @@ namespace backend.Services
         {
             var from = _config["MailSettings:From"];
             var smtp = _config["MailSettings:Smtp"];
-            var port = int.Parse(_config["MailSettings:Port"]!);
+int port = int.TryParse(_config["MailSettings:Port"], out var p) ? p : 587;
+
             var user = _config["MailSettings:User"];
             var pass = _config["MailSettings:Password"];
 
