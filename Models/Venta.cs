@@ -9,7 +9,7 @@ public partial class Venta
 
     public DateOnly FechaVenta { get; set; }
 
-    public int FkCliente { get; set; } = null // ← Corregido: quitado = null!
+    public int FkCliente { get; set; }// ← Corregido: quitado = null!
 
     public string MetodoPago { get; set; } = null!;
 
