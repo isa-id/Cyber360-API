@@ -4,7 +4,7 @@ public partial class Venta
 
     public DateOnly FechaVenta { get; set; }
 
-    public int? FkCliente { get; set; } // Hacerlo nullable
+    public int FkCliente { get; set; } // Hacerlo nullable
 
     public string MetodoPago { get; set; } = null!;
 
