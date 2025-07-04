@@ -17,7 +17,7 @@ namespace backend.Services
         {
             var from = _config["MailSettings:From"];
             var smtp = _config["MailSettings:Smtp"];
-            var port = int.Parse(_config["MailSettings:Port"]);
+            var port = int.Parse(_config["MailSettings:Port"]!);
             var user = _config["MailSettings:User"];
             var pass = _config["MailSettings:Password"];
 
@@ -27,7 +27,7 @@ namespace backend.Services
                 EnableSsl = true
             };
 
-            var message = new MailMessage(from, email)
+            var message = new MailMessage(from!, email)
             {
                 Subject = "Código de recuperación - Cyber360",
                 Body = $"Hola {nombre},\n\nTu código de recuperación es: {codigo}\nEste código vence en 10 minutos.",
@@ -38,3 +38,4 @@ namespace backend.Services
         }
     }
 }
+

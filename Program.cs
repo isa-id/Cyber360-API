@@ -1,6 +1,7 @@
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
 using backend.Services;
+using backend.Configurations;
 
 namespace backend
 {
@@ -36,6 +37,9 @@ namespace backend
             builder.Services.AddControllers()
     .AddJsonOptions(x =>
         x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
+            builder.Services.Configure<MailSettings>(
+                builder.Configuration.GetSection("MailSettings"));
+            builder.Services.AddTransient<IMailService, MailService>();
 
 
             var app = builder.Build();
