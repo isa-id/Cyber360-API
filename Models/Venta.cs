@@ -9,7 +9,7 @@ public partial class Venta
 
     public DateOnly FechaVenta { get; set; }
 
-    public int FkCliente { get; set; }
+    public int FkCliente { get; set; }=null!
 
     public string MetodoPago { get; set; } = null!;
 
