@@ -73,5 +73,23 @@ namespace backend.Controllers
 
             return Ok(new { message = "Si el correo está registrado, se enviará un código." });
         }
+
+        [HttpPost("verify-code")]
+public async Task<IActionResult> VerifyCode([FromBody] VerifyCodeRequest request)
+{
+    var usuario = await _context.Usuario.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+    if (usuario == null)
+        return Unauthorized(new { message = "Código inválido o expirado." });
+
+    var ahora = DateTime.UtcNow;
+
+    if (usuario.CodigoRecuperacion != request.Codigo || usuario.CodigoExpira == null || ahora > usuario.CodigoExpira)
+    {
+        return Unauthorized(new { message = "Código inválido o expirado." });
+    }
+
+    return Ok(new { message = "Código válido. Proceda a cambiar su contraseña." });
+}
     }
 }
