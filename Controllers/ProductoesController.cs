@@ -78,35 +78,52 @@ public class ProductoCreateDto
     public int FkCategoria { get; set; }
 }
         // PUT: api/Producto/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutProducto(int id, Producto producto)
+       // PUT: api/Producto/5
+[HttpPut("{id}")]
+public async Task<IActionResult> PutProducto(int id, [FromBody] ProductoUpdateDto dto)
+{
+    // Buscar el producto existente
+    var producto = await _context.Productos.FindAsync(id);
+    if (producto == null)
+    {
+        return NotFound();
+    }
+
+    // Actualizar solo los campos permitidos
+    producto.Nombre = dto.Nombre;
+    producto.Cantidad = dto.Cantidad;
+    producto.Precio = dto.Precio;
+    producto.FkImagen = dto.FkImagen;
+    producto.FkCategoria = dto.FkCategoria;
+
+    try
+    {
+        await _context.SaveChangesAsync();
+    }
+    catch (DbUpdateConcurrencyException)
+    {
+        if (!ProductoExists(id))
         {
-            if (id != producto.IdProducto)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(producto).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductoExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return NotFound();
         }
+        else
+        {
+            throw;
+        }
+    }
 
+    return NoContent();
+}
+
+// DTO para actualización
+public class ProductoUpdateDto
+{
+    public string Nombre { get; set; }
+    public int Cantidad { get; set; }
+    public decimal Precio { get; set; }
+    public int FkImagen { get; set; }
+    public int FkCategoria { get; set; }
+}
         // DELETE: api/Producto/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProducto(int id)
