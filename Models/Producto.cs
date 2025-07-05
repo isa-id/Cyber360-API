@@ -21,7 +21,7 @@ public partial class Producto
 
     public virtual ICollection<ComprasXProducto> ComprasXProductos { get; set; } = new List<ComprasXProducto>();
     
-     public virtual Categoria FkCategoriaNavigation { get; set; }
+     public virtual CategoriaProducto FkCategoriaNavigation { get; set; }
     
     public virtual ImagenesProducto FkImagenNavigation { get; set; }
 
