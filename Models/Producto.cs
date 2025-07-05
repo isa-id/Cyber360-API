@@ -20,10 +20,10 @@ public partial class Producto
     public int FkCategoria { get; set; }
 
     public virtual ICollection<ComprasXProducto> ComprasXProductos { get; set; } = new List<ComprasXProducto>();
-
-    public virtual CategoriaProducto FkCategoriaNavigation { get; set; } = null!;
-
-    public virtual ImagenesProducto FkImagenNavigation { get; set; } = null!;
+    
+     public virtual Categoria FkCategoriaNavigation { get; set; }
+    
+    public virtual ImagenesProducto FkImagenNavigation { get; set; }
 
     public virtual ICollection<Servicioxinsumo> Servicioxinsumos { get; set; } = new List<Servicioxinsumo>();
 }
