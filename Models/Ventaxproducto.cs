@@ -15,5 +15,5 @@ public partial class Ventaxproducto
 
     public decimal Subtotal { get; set; }
 
-    public virtual Venta FkVentaNavigation { get; set; } = null!;
+    public virtual Venta? FkVentaNavigation { get; set; }
 }
