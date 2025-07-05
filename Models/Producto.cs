@@ -15,7 +15,7 @@ public partial class Producto
 
     public DateOnly FechaCreacion { get; set; }
 
-    public int FkImagen { get; set; } = null!;
+    public int FkImagen { get; set; }
 
     public int FkCategoria { get; set; }
 
