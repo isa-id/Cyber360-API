@@ -9,7 +9,7 @@ public partial class Ventaxproducto
 
     public int FkVenta { get; set; }
 
-    public int FkProducto { get; set; } =null!;
+    public int FkProducto { get; set; } = null!;
 
     public int Cantidad { get; set; }
 
