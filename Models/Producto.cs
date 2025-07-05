@@ -13,7 +13,7 @@ public partial class Producto
 
     public decimal Precio { get; set; }
 
-    public DateOnly FechaCreacion { get; set; }
+    public DateTime FechaCreacion { get; set; }
 
     public int FkImagen { get; set; }
 
