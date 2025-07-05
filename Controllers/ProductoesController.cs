@@ -43,15 +43,40 @@ namespace backend.Controllers
         }
 
         // POST: api/Producto
-        [HttpPost]
-        public async Task<ActionResult<Producto>> PostProducto(Producto producto)
-        {
-            _context.Productos.Add(producto);
-            await _context.SaveChangesAsync();
+       [HttpPost]
+public async Task<ActionResult> PostProducto([FromBody] ProductoCreateDto dto)
+{
+    var producto = new Producto {
+        Nombre = dto.Nombre,
+        Cantidad = dto.Cantidad,
+        Precio = dto.Precio,
+        FechaCreacion = DateTime.Now,
+        FkImagen = dto.FkImagen, // Asignamos solo el ID
+        FkCategoria = dto.FkCategoria // Asignamos solo el ID
+    };
 
-            return CreatedAtAction(nameof(GetProducto), new { id = producto.IdProducto }, producto);
-        }
+    _context.Productos.Add(producto);
+    await _context.SaveChangesAsync();
 
+    return CreatedAtAction(nameof(GetProducto), new { id = producto.IdProducto }, producto);
+}
+
+public class ProductoCreateDto
+{
+    
+    public string Nombre { get; set; }
+    
+    public int Cantidad { get; set; }
+    
+    
+    public decimal Precio { get; set; }
+    
+    
+    public int FkImagen { get; set; }
+    
+   
+    public int FkCategoria { get; set; }
+}
         // PUT: api/Producto/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProducto(int id, Producto producto)
