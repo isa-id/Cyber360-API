@@ -50,7 +50,7 @@ public async Task<ActionResult> PostProducto([FromBody] ProductoCreateDto dto)
         Nombre = dto.Nombre,
         Cantidad = dto.Cantidad,
         Precio = dto.Precio,
-        FechaCreacion = DateOnly.Now,
+        FechaCreacion = DateOnly,
         FkImagen = dto.FkImagen, // Asignamos solo el ID
         FkCategoria = dto.FkCategoria // Asignamos solo el ID
     };
