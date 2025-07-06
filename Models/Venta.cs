@@ -15,6 +15,8 @@ public partial class Venta
 
     public decimal Total { get; set; }
 
+    public string estado {get; set;} = null;
+
     public virtual Cliente? FkClienteNavigation { get; set; }
 
     public virtual ICollection<Servicioxventum> Servicioxventa { get; set; } = new List<Servicioxventum>();
