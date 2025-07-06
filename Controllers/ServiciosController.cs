@@ -4,7 +4,7 @@ using backend.Models;
 
 namespace backend.Controllers
 {
-    [Route("controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class ServiciosController : ControllerBase
     {
