@@ -9,6 +9,8 @@ using backend.Models;
 
 namespace backend.Controllers
 {
+    [Route("[controller]")]
+    [ApiController]
     public class EquipoesController : Controller
     {
         private readonly NeondbContext _context;
