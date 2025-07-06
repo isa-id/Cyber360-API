@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
 
@@ -37,29 +37,59 @@ namespace backend.Controllers
                 .FirstOrDefaultAsync(s => s.IdServicio == id);
 
             if (servicio == null)
+            {
                 return NotFound();
+            }
 
             return servicio;
         }
 
         // POST: api/Servicios
         [HttpPost]
-        public async Task<ActionResult<Servicio>> PostServicio(Servicio servicio)
+        public async Task<ActionResult> PostServicio([FromBody] ServicioCreateDto dto)
         {
+            var servicio = new Servicio 
+            {
+                NombreServicio = dto.NombreServicio,
+                Precio = dto.Precio,
+                Detalles = dto.Detalles,
+                FkCategoriaServicio = dto.FkCategoriaServicio,
+                FkImagen = dto.FkImagen,
+                FkEquipo = dto.FkEquipo
+            };
+
             _context.Servicios.Add(servicio);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetServicio), new { id = servicio.IdServicio }, servicio);
         }
 
+        public class ServicioCreateDto
+        {
+            public string NombreServicio { get; set; }
+            public decimal Precio { get; set; }
+            public string Detalles { get; set; }
+            public int FkCategoriaServicio { get; set; }
+            public int FkImagen { get; set; }
+            public int FkEquipo { get; set; }
+        }
+
         // PUT: api/Servicios/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutServicio(int id, Servicio servicio)
+        public async Task<IActionResult> PutServicio(int id, [FromBody] ServicioUpdateDto dto)
         {
-            if (id != servicio.IdServicio)
-                return BadRequest();
+            var servicio = await _context.Servicios.FindAsync(id);
+            if (servicio == null)
+            {
+                return NotFound();
+            }
 
-            _context.Entry(servicio).State = EntityState.Modified;
+            servicio.NombreServicio = dto.NombreServicio;
+            servicio.Precio = dto.Precio;
+            servicio.Detalles = dto.Detalles;
+            servicio.FkCategoriaServicio = dto.FkCategoriaServicio;
+            servicio.FkImagen = dto.FkImagen;
+            servicio.FkEquipo = dto.FkEquipo;
 
             try
             {
@@ -68,12 +98,26 @@ namespace backend.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!ServicioExists(id))
+                {
                     return NotFound();
+                }
                 else
+                {
                     throw;
+                }
             }
 
             return NoContent();
+        }
+
+        public class ServicioUpdateDto
+        {
+            public string NombreServicio { get; set; }
+            public decimal Precio { get; set; }
+            public string Detalles { get; set; }
+            public int FkCategoriaServicio { get; set; }
+            public int FkImagen { get; set; }
+            public int FkEquipo { get; set; }
         }
 
         // DELETE: api/Servicios/5
@@ -82,7 +126,9 @@ namespace backend.Controllers
         {
             var servicio = await _context.Servicios.FindAsync(id);
             if (servicio == null)
+            {
                 return NotFound();
+            }
 
             _context.Servicios.Remove(servicio);
             await _context.SaveChangesAsync();
