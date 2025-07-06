@@ -21,9 +21,9 @@ public partial class Servicio
 
     public virtual CategoriaServicio FkCategoriaServicioNavigation { get; set; } = null!;
 
-    public virtual Equipo FkEquipoNavigation { get; set; } = null!;
+    public virtual Equipo FkEquipoNavigation { get; set; } 
 
-    public virtual ImagenesServicio FkImagenNavigation { get; set; } = null!;
+    public virtual ImagenesServicio FkImagenNavigation { get; set; } 
 
     public virtual ICollection<Servicioxinsumo> Servicioxinsumos { get; set; } = new List<Servicioxinsumo>();
 
