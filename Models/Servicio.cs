@@ -13,13 +13,13 @@ public partial class Servicio
 
     public string Detalles { get; set; } = null!;
 
-    public int FkCategoriaServicio { get; set; } = null;
+    public int? FkCategoriaServicio { get; set; }
 
-    public int FkImagen { get; set; } = null;
+    public int? FkImagen { get; set; } 
 
-    public int FkEquipo { get; set; } = null;
+    public int? FkEquipo { get; set; } 
 
-    public virtual CategoriaServicio FkCategoriaServicioNavigation { get; set; } = null;
+    public virtual CategoriaServicio? FkCategoriaServicioNavigation { get; set; } 
 
     public virtual Equipo? FkEquipoNavigation { get; set; } 
 
