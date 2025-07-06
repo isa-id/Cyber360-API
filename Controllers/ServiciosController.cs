@@ -55,7 +55,7 @@ namespace backend.Controllers
                 Detalles = dto.Detalles,
                 FkCategoriaServicio = dto.FkCategoriaServicio,
                 FkImagen = dto.FkImagen,
-                FkEquipo = dto.FkEquipo
+                FkEquipo = dto.FkEquipo // Esto ahora puede ser null
             };
 
             _context.Servicios.Add(servicio);
@@ -71,7 +71,7 @@ namespace backend.Controllers
             public string Detalles { get; set; }
             public int FkCategoriaServicio { get; set; }
             public int FkImagen { get; set; }
-            public int FkEquipo { get; set; }
+            public int? FkEquipo { get; set; } // Cambiado a nullable
         }
 
         // PUT: api/Servicios/5
@@ -89,7 +89,7 @@ namespace backend.Controllers
             servicio.Detalles = dto.Detalles;
             servicio.FkCategoriaServicio = dto.FkCategoriaServicio;
             servicio.FkImagen = dto.FkImagen;
-            servicio.FkEquipo = dto.FkEquipo;
+            servicio.FkEquipo = dto.FkEquipo; // Esto ahora puede ser null
 
             try
             {
@@ -117,7 +117,7 @@ namespace backend.Controllers
             public string Detalles { get; set; }
             public int FkCategoriaServicio { get; set; }
             public int FkImagen { get; set; }
-            public int FkEquipo { get; set; }
+            public int? FkEquipo { get; set; } // Cambiado a nullable
         }
 
         // DELETE: api/Servicios/5
