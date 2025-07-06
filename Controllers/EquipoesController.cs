@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
 
@@ -11,143 +10,90 @@ namespace backend.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class EquipoesController : Controller
+    public class EquiposController : ControllerBase
     {
         private readonly NeondbContext _context;
 
-        public EquipoesController(NeondbContext context)
+        public EquiposController(NeondbContext context)
         {
             _context = context;
         }
 
-        // GET: Equipoes
-        public async Task<IActionResult> Index()
+        // GET: api/Equipos
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Equipo>>> GetEquipos()
         {
-            return View(await _context.Equipos.ToListAsync());
+            return await _context.Equipos.ToListAsync();
         }
 
-        // GET: Equipoes/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: api/Equipos/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Equipo>> GetEquipo(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var equipo = await _context.Equipos
-                .FirstOrDefaultAsync(m => m.IdEquipo == id);
-            if (equipo == null)
-            {
-                return NotFound();
-            }
-
-            return View(equipo);
-        }
-
-        // GET: Equipoes/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Equipoes/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("IdEquipo,Nombre,Categoria,Tiempo")] Equipo equipo)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(equipo);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(equipo);
-        }
-
-        // GET: Equipoes/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var equipo = await _context.Equipos.FindAsync(id);
+
             if (equipo == null)
             {
                 return NotFound();
             }
-            return View(equipo);
+
+            return equipo;
         }
 
-        // POST: Equipoes/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("IdEquipo,Nombre,Categoria,Tiempo")] Equipo equipo)
+        // PUT: api/Equipos/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutEquipo(int id, Equipo equipo)
         {
             if (id != equipo.IdEquipo)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            _context.Entry(equipo).State = EntityState.Modified;
+
+            try
             {
-                try
-                {
-                    _context.Update(equipo);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!EquipoExists(equipo.IdEquipo))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
-            return View(equipo);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!EquipoExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        // GET: Equipoes/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // POST: api/Equipos
+        [HttpPost]
+        public async Task<ActionResult<Equipo>> PostEquipo(Equipo equipo)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            _context.Equipos.Add(equipo);
+            await _context.SaveChangesAsync();
 
-            var equipo = await _context.Equipos
-                .FirstOrDefaultAsync(m => m.IdEquipo == id);
+            return CreatedAtAction("GetEquipo", new { id = equipo.IdEquipo }, equipo);
+        }
+
+        // DELETE: api/Equipos/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteEquipo(int id)
+        {
+            var equipo = await _context.Equipos.FindAsync(id);
             if (equipo == null)
             {
                 return NotFound();
             }
 
-            return View(equipo);
-        }
-
-        // POST: Equipoes/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var equipo = await _context.Equipos.FindAsync(id);
-            if (equipo != null)
-            {
-                _context.Equipos.Remove(equipo);
-            }
-
+            _context.Equipos.Remove(equipo);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return NoContent();
         }
 
         private bool EquipoExists(int id)
