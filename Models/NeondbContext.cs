@@ -57,9 +57,9 @@ public partial class NeondbContext : DbContext
 
     public virtual DbSet<Ventaxproducto> Ventaxproductos { get; set; }
 
-//    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//        => optionsBuilder.UseNpgsql("Host=ep-twilight-leaf-a81vdkl5-pooler.eastus2.azure.neon.tech;Database=neondb;Username=neondb_owner;Password=npg_DId51CeRfMQg;SSL Mode=Require");
+    //    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+    //        => optionsBuilder.UseNpgsql("Host=ep-twilight-leaf-a81vdkl5-pooler.eastus2.azure.neon.tech;Database=neondb;Username=neondb_owner;Password=npg_DId51CeRfMQg;SSL Mode=Require");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -361,16 +361,20 @@ public partial class NeondbContext : DbContext
         });
 
         modelBuilder.Entity<Role>(entity =>
-        {
-            entity.HasKey(e => e.IdRol).HasName("roles_pkey");
+{
+    entity.HasKey(e => e.IdRol).HasName("roles_pkey");
 
-            entity.ToTable("roles");
+    entity.ToTable("roles");
 
-            entity.Property(e => e.IdRol).HasColumnName("id_rol");
-            entity.Property(e => e.NombreRol)
-                .HasMaxLength(50)
-                .HasColumnName("nombre_rol");
-        });
+    entity.Property(e => e.IdRol).HasColumnName("id_rol");
+    entity.Property(e => e.NombreRol)
+        .HasMaxLength(50)
+        .HasColumnName("nombre_rol");
+    entity.Property(e => e.Activo)
+        .HasColumnName("activo")
+        .IsRequired();
+});
+
 
         modelBuilder.Entity<Servicio>(entity =>
         {
