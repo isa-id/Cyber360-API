@@ -360,20 +360,26 @@ public partial class NeondbContext : DbContext
                 .HasConstraintName("reparaciones_fk_estado_fkey");
         });
 
-        modelBuilder.Entity<Role>(entity =>
-{
-    entity.HasKey(e => e.IdRol).HasName("roles_pkey");
+            modelBuilder.Entity<Role>(entity =>
+        {
+            entity.HasKey(e => e.IdRol).HasName("roles_pkey");
 
-    entity.ToTable("roles");
+            entity.ToTable("roles");
 
-    entity.Property(e => e.IdRol).HasColumnName("id_rol");
-    entity.Property(e => e.NombreRol)
-        .HasMaxLength(50)
-        .HasColumnName("nombre_rol");
-    entity.Property(e => e.Activo)
-        .HasColumnName("activo")
-        .IsRequired();
-});
+            entity.Property(e => e.IdRol).HasColumnName("id_rol");
+            entity.Property(e => e.NombreRol)
+                .HasMaxLength(50)
+                .HasColumnName("nombre_rol");
+
+            entity.Property(e => e.Descripcion)
+                .HasMaxLength(200)        // ajusta tamaño si aplica
+                .HasColumnName("descripcion");
+
+            entity.Property(e => e.Activo)
+                .HasColumnName("activo")
+                .IsRequired();
+        });
+
 
 
         modelBuilder.Entity<Servicio>(entity =>
