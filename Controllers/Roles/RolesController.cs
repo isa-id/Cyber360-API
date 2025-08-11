@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
+using Cyber360.DTOs;
 
 namespace backend.Controllers
 {
@@ -39,40 +40,80 @@ namespace backend.Controllers
             return role;
         }
 
-        // POST: api/Roles
         [HttpPost]
-        public async Task<ActionResult<Role>> PostRole(Role role)
+        public async Task<ActionResult<Role>> PostRole([FromBody] RoleCreateDto roleDto)
         {
-            role.Activo = true; // Forzamos que siempre sea activo al crearlo
+            var role = new Role
+            {
+                NombreRol = roleDto.NombreRol,
+                Descripcion = roleDto.Descripcion,
+                Activo = roleDto.Activo
+            };
+
             _context.Roles.Add(role);
+            await _context.SaveChangesAsync();
+
+            // Guardar permisos relacionados (creamos entradas en Permisoxrol)
+            foreach (var permisoId in roleDto.PermisosIds)
+            {
+                _context.Permisoxrols.Add(new Permisoxrol
+                {
+                    FkRol = role.IdRol,
+                    FkPermiso = permisoId
+                });
+            }
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetRole), new { id = role.IdRol }, role);
         }
 
-        // PUT: api/Roles/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRole(int id, Role role)
+public async Task<IActionResult> PutRole(int id, [FromBody] RoleCreateDto roleDto)
+{
+    if (id != roleDto.IdRol) // Si decides agregar IdRol en el DTO para PUT, o pásalo como parámetro separado
+        return BadRequest("El ID del rol no coincide.");
+
+    var role = await _context.Roles.Include(r => r.Permisoxrols).FirstOrDefaultAsync(r => r.IdRol == id);
+    if (role == null)
+        return NotFound();
+
+    // Actualizar campos simples
+    role.NombreRol = roleDto.NombreRol;
+    role.Descripcion = roleDto.Descripcion;
+    role.Activo = roleDto.Activo;
+
+    // Actualizar permisos relacionados
+
+    // 1. Eliminar permisos anteriores
+    _context.Permisoxrols.RemoveRange(role.Permisoxrols);
+
+    // 2. Agregar nuevos permisos
+    if (roleDto.PermisosIds != null && roleDto.PermisosIds.Any())
+    {
+        foreach (var permisoId in roleDto.PermisosIds)
         {
-            if (id != role.IdRol)
-                return BadRequest();
-
-            _context.Entry(role).State = EntityState.Modified;
-
-            try
+            _context.Permisoxrols.Add(new Permisoxrol
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RoleExists(id))
-                    return NotFound();
-                else
-                    throw;
-            }
-
-            return NoContent();
+                FkRol = role.IdRol,
+                FkPermiso = permisoId
+            });
         }
+    }
+
+    try
+    {
+        await _context.SaveChangesAsync();
+    }
+    catch (DbUpdateConcurrencyException)
+    {
+        if (!RoleExists(id))
+            return NotFound();
+        else
+            throw;
+    }
+
+    return NoContent();
+}
 
         // PATCH: api/Roles/CambiarEstado/5?activo=true
         [HttpPatch("CambiarEstado/{id}")]
