@@ -123,6 +123,12 @@ namespace backend.Controllers
             if (role == null)
                 return NotFound();
 
+            // Suponiendo que el ID del rol Administrador es 1
+            if (role.IdRol == 1 && !activo)
+            {
+                return BadRequest("El rol Administrador no puede ser inactivado.");
+            }
+
             role.Activo = activo;
             await _context.SaveChangesAsync();
 
