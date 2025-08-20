@@ -141,15 +141,14 @@ namespace backend.Controllers
             return NoContent();
         }
 
-        // PATCH: /usuarios/{id}/inactivar
-        [HttpPatch("{id}/inactivar")]
-        public async Task<IActionResult> InactivarUsuario(int id)
+        [HttpPatch("{id}/estado")]
+        public async Task<IActionResult> CambiarEstadoUsuario(int id, [FromBody] bool estado)
         {
             var usuario = await _context.Usuario.FindAsync(id);
             if (usuario == null)
                 return NotFound();
 
-            usuario.Estado = false;
+            usuario.Estado = estado;
             await _context.SaveChangesAsync();
 
             return NoContent();
