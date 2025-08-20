@@ -465,40 +465,52 @@ public partial class NeondbContext : DbContext
         });
 
         modelBuilder.Entity<Usuario>(entity =>
-        {
-            entity.HasKey(e => e.IdUsuario).HasName("usuarios_pkey");
+{
+    entity.HasKey(e => e.IdUsuario).HasName("usuarios_pkey");
 
-            entity.ToTable("usuarios");
+    entity.ToTable("usuarios");
 
-            entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
-            entity.Property(e => e.Celular)
-                .HasMaxLength(15)
-                .HasColumnName("celular");
-            entity.Property(e => e.Contrasena)
-                .HasMaxLength(60)
-                .HasColumnName("contrasena");
-            entity.Property(e => e.Direccion)
-                .HasMaxLength(100)
-                .HasColumnName("direccion");
-            entity.Property(e => e.Documento)
-                .HasMaxLength(20)
-                .HasColumnName("documento");
-            entity.Property(e => e.Email)
-                .HasMaxLength(100)
-                .HasColumnName("email");
-            entity.Property(e => e.FkRol).HasColumnName("fk_rol");
-            entity.Property(e => e.Nombre)
-                .HasMaxLength(50)
-                .HasColumnName("nombre");
-            entity.Property(e => e.TipoDoc)
-                .HasMaxLength(20)
-                .HasColumnName("tipo_doc");
+    entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
 
-            entity.HasOne(d => d.FkRolNavigation).WithMany(p => p.Usuarios)
-                .HasForeignKey(d => d.FkRol)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("usuarios_fk_rol_fkey");
-        });
+    entity.Property(e => e.Celular)
+        .HasMaxLength(15)
+        .HasColumnName("celular");
+
+    entity.Property(e => e.Contrasena)
+        .HasMaxLength(60)
+        .HasColumnName("contrasena");
+
+    entity.Property(e => e.Direccion)
+        .HasMaxLength(100)
+        .HasColumnName("direccion");
+
+    entity.Property(e => e.Documento)
+        .HasMaxLength(20)
+        .HasColumnName("documento");
+
+    entity.Property(e => e.Email)
+        .HasMaxLength(100)
+        .HasColumnName("email");
+
+    entity.Property(e => e.FkRol).HasColumnName("fk_rol");
+
+    entity.Property(e => e.Nombre)
+        .HasMaxLength(50)
+        .HasColumnName("nombre");
+
+    entity.Property(e => e.TipoDoc)
+        .HasMaxLength(20)
+        .HasColumnName("tipo_doc");
+
+    entity.Property(e => e.Estado) // 👈 nuevo campo
+        .HasColumnName("estado")
+        .HasDefaultValue(true);
+
+    entity.HasOne(d => d.FkRolNavigation).WithMany(p => p.Usuarios)
+        .HasForeignKey(d => d.FkRol)
+        .OnDelete(DeleteBehavior.ClientSetNull)
+        .HasConstraintName("usuarios_fk_rol_fkey");
+});
 
         modelBuilder.Entity<Venta>(entity =>
         {
