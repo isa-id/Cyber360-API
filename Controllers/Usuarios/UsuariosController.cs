@@ -21,7 +21,7 @@ namespace backend.Controllers
         public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetUsuarios()
         {
             var usuarios = await _context.Usuario
-                .Include(u => u.FkRolNavigation) // para traer el Rol
+                .Include(u => u.FkRolNavigation)
                 .Select(u => new UsuarioDto
                 {
                     IdUsuario = u.IdUsuario,
@@ -29,7 +29,10 @@ namespace backend.Controllers
                     Email = u.Email,
                     Celular = u.Celular,
                     Rol = u.FkRolNavigation != null ? u.FkRolNavigation.NombreRol : "Sin rol",
-                    Estado = u.Estado
+                    Estado = u.Estado,
+                    TipoDoc = u.TipoDoc,
+                    Documento = u.Documento,
+                    Direccion = u.Direccion
                 })
                 .ToListAsync();
 
@@ -50,7 +53,10 @@ namespace backend.Controllers
                     Email = u.Email,
                     Celular = u.Celular,
                     Rol = u.FkRolNavigation != null ? u.FkRolNavigation.NombreRol : "Sin rol",
-                    Estado = u.Estado
+                    Estado = u.Estado,
+                    TipoDoc = u.TipoDoc,
+                    Documento = u.Documento,
+                    Direccion = u.Direccion
                 })
                 .FirstOrDefaultAsync();
 
@@ -59,7 +65,6 @@ namespace backend.Controllers
 
             return Ok(usuario);
         }
-
         // POST: /usuarios
         [HttpPost]
         public async Task<ActionResult<UsuarioDto>> CreateUsuario([FromBody] UsuarioCreateOrUpdateDto dto)
