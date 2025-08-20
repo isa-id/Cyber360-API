@@ -64,6 +64,13 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<UsuarioDto>> CreateUsuario([FromBody] UsuarioCreateOrUpdateDto dto)
         {
+            // Validar si el rol existe
+            var rol = await _context.Roles.FindAsync(dto.FkRol);
+            if (rol == null)
+            {
+                return BadRequest($"El rol con id {dto.FkRol} no existe.");
+            }
+
             var usuario = new Usuario
             {
                 TipoDoc = dto.TipoDoc,
@@ -82,20 +89,15 @@ namespace backend.Controllers
             _context.Usuario.Add(usuario);
             await _context.SaveChangesAsync();
 
-            // devolver con DTO
-            var result = await _context.Usuario
-                .Include(u => u.FkRolNavigation)
-                .Where(u => u.IdUsuario == usuario.IdUsuario)
-                .Select(u => new UsuarioDto
-                {
-                    IdUsuario = u.IdUsuario,
-                    Nombre = u.Nombre,
-                    Email = u.Email,
-                    Celular = u.Celular,
-                    Rol = u.FkRolNavigation != null ? u.FkRolNavigation.NombreRol : "Sin rol",
-                    Estado = u.Estado
-                })
-                .FirstAsync();
+            var result = new UsuarioDto
+            {
+                IdUsuario = usuario.IdUsuario,
+                Nombre = usuario.Nombre,
+                Email = usuario.Email,
+                Celular = usuario.Celular,
+                Rol = rol.NombreRol,
+                Estado = usuario.Estado
+            };
 
             return CreatedAtAction(nameof(GetUsuario), new { id = usuario.IdUsuario }, result);
         }
@@ -107,6 +109,13 @@ namespace backend.Controllers
             var usuario = await _context.Usuario.FindAsync(id);
             if (usuario == null)
                 return NotFound();
+
+            // Validar rol
+            var rol = await _context.Roles.FindAsync(dto.FkRol);
+            if (rol == null)
+            {
+                return BadRequest($"El rol con id {dto.FkRol} no existe.");
+            }
 
             usuario.TipoDoc = dto.TipoDoc;
             usuario.Documento = dto.Documento;
@@ -127,7 +136,7 @@ namespace backend.Controllers
             return NoContent();
         }
 
-        // DELETE: /usuarios/{id} → inactivar
+        // DELETE: /usuarios/{id} → inactivar usuario
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUsuario(int id)
         {
