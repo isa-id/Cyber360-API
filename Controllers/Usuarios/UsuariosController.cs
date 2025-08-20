@@ -64,11 +64,14 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<UsuarioDto>> CreateUsuario([FromBody] UsuarioCreateOrUpdateDto dto)
         {
-            // Validar si el rol existe
-            var rol = await _context.Roles.FindAsync(dto.FkRol);
+            // Validar si el rol existe y está activo
+            var rol = await _context.Roles
+                .Where(r => r.IdRol == dto.FkRol && r.Activo == true)
+                .FirstOrDefaultAsync();
+
             if (rol == null)
             {
-                return BadRequest($"El rol con id {dto.FkRol} no existe.");
+                return BadRequest($"El rol con id {dto.FkRol} no existe o está inactivo.");
             }
 
             var usuario = new Usuario
@@ -80,7 +83,7 @@ namespace backend.Controllers
                 Email = dto.Email,
                 Direccion = dto.Direccion,
                 FkRol = dto.FkRol,
-                Estado = true, // siempre activo por defecto
+                Estado = true, // siempre se crea activo
                 Contrasena = dto.Contrasena != null
                     ? BCrypt.Net.BCrypt.HashPassword(dto.Contrasena)
                     : BCrypt.Net.BCrypt.HashPassword("123456") // default
@@ -110,11 +113,14 @@ namespace backend.Controllers
             if (usuario == null)
                 return NotFound();
 
-            // Validar rol
-            var rol = await _context.Roles.FindAsync(dto.FkRol);
+            // Validar rol (activo)
+            var rol = await _context.Roles
+                .Where(r => r.IdRol == dto.FkRol && r.Activo == true)
+                .FirstOrDefaultAsync();
+
             if (rol == null)
             {
-                return BadRequest($"El rol con id {dto.FkRol} no existe.");
+                return BadRequest($"El rol con id {dto.FkRol} no existe o está inactivo.");
             }
 
             usuario.TipoDoc = dto.TipoDoc;
@@ -124,7 +130,6 @@ namespace backend.Controllers
             usuario.Email = dto.Email;
             usuario.Direccion = dto.Direccion;
             usuario.FkRol = dto.FkRol;
-            // ⚠️ Estado NO se toca aquí
 
             if (!string.IsNullOrEmpty(dto.Contrasena))
             {
