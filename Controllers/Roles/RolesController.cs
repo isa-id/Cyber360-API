@@ -162,5 +162,25 @@ namespace backend.Controllers
         {
             return _context.Roles.Any(e => e.IdRol == id);
         }
+
+        // GET: api/Roles/Dropdown
+        [HttpGet("Dropdown")]
+        public async Task<ActionResult<IEnumerable<object>>> GetRolesDropdown([FromQuery] bool? soloActivos)
+        {
+            IQueryable<Role> query = _context.Roles;
+
+            if (soloActivos.HasValue && soloActivos.Value)
+                query = query.Where(r => r.Activo);
+
+            var roles = await query
+                .Select(r => new
+                {
+                    r.IdRol,
+                    r.NombreRol
+                })
+                .ToListAsync();
+
+            return Ok(roles);
+        }
     }
 }

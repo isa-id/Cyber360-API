@@ -21,7 +21,7 @@ namespace backend.Controllers
         public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetUsuarios()
         {
             var usuarios = await _context.Usuario
-                .Include(u => u.FkRolNavigation) // ← para traer el Rol
+                .Include(u => u.FkRolNavigation) // para traer el Rol
                 .Select(u => new UsuarioDto
                 {
                     IdUsuario = u.IdUsuario,
@@ -80,9 +80,9 @@ namespace backend.Controllers
                 Email = dto.Email,
                 Direccion = dto.Direccion,
                 FkRol = dto.FkRol,
-                Estado = dto.Estado,
-                Contrasena = dto.Contrasena != null 
-                    ? BCrypt.Net.BCrypt.HashPassword(dto.Contrasena) 
+                Estado = true, // siempre activo por defecto
+                Contrasena = dto.Contrasena != null
+                    ? BCrypt.Net.BCrypt.HashPassword(dto.Contrasena)
                     : BCrypt.Net.BCrypt.HashPassword("123456") // default
             };
 
@@ -124,7 +124,7 @@ namespace backend.Controllers
             usuario.Email = dto.Email;
             usuario.Direccion = dto.Direccion;
             usuario.FkRol = dto.FkRol;
-            usuario.Estado = dto.Estado;
+            // ⚠️ Estado NO se toca aquí
 
             if (!string.IsNullOrEmpty(dto.Contrasena))
             {
@@ -136,7 +136,21 @@ namespace backend.Controllers
             return NoContent();
         }
 
-        // DELETE: /usuarios/{id} → inactivar usuario
+        // PATCH: /usuarios/{id}/inactivar
+        [HttpPatch("{id}/inactivar")]
+        public async Task<IActionResult> InactivarUsuario(int id)
+        {
+            var usuario = await _context.Usuario.FindAsync(id);
+            if (usuario == null)
+                return NotFound();
+
+            usuario.Estado = false;
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // DELETE: /usuarios/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUsuario(int id)
         {
@@ -144,7 +158,7 @@ namespace backend.Controllers
             if (usuario == null)
                 return NotFound();
 
-            usuario.Estado = false;
+            _context.Usuario.Remove(usuario);
             await _context.SaveChangesAsync();
 
             return NoContent();

@@ -21,7 +21,6 @@ namespace backend.DTOs
         public string Email { get; set; } = null!;
         public string Direccion { get; set; } = null!;
         public int FkRol { get; set; }
-        public bool Estado { get; set; } = true;
         public string? Contrasena { get; set; } // opcional en edición
     }
 }
