@@ -28,7 +28,7 @@ namespace backend.Controllers
                     Nombre = u.Nombre,
                     Email = u.Email,
                     Celular = u.Celular,
-                    Rol = u.FkRolNavigation != null ? u.FkRolNavigation.Nombre : "Sin rol",
+                    Rol = u.FkRolNavigation != null ? u.FkRolNavigation.NombreRol : "Sin rol",
                     Estado = u.Estado
                 })
                 .ToListAsync();
@@ -49,7 +49,7 @@ namespace backend.Controllers
                     Nombre = u.Nombre,
                     Email = u.Email,
                     Celular = u.Celular,
-                    Rol = u.FkRolNavigation != null ? u.FkRolNavigation.Nombre : "Sin rol",
+                    Rol = u.FkRolNavigation != null ? u.FkRolNavigation.NombreRol : "Sin rol",
                     Estado = u.Estado
                 })
                 .FirstOrDefaultAsync();
@@ -92,7 +92,7 @@ namespace backend.Controllers
                     Nombre = u.Nombre,
                     Email = u.Email,
                     Celular = u.Celular,
-                    Rol = u.FkRolNavigation != null ? u.FkRolNavigation.Nombre : "Sin rol",
+                    Rol = u.FkRolNavigation != null ? u.FkRolNavigation.NombreRol : "Sin rol",
                     Estado = u.Estado
                 })
                 .FirstAsync();
