@@ -65,10 +65,27 @@ namespace backend.Controllers
 
             return Ok(usuario);
         }
+
         // POST: /usuarios
         [HttpPost]
         public async Task<ActionResult<UsuarioDto>> CreateUsuario([FromBody] UsuarioCreateOrUpdateDto dto)
         {
+            dto.Email = dto.Email.Trim().ToLower(); // Normalizamos
+
+            // Validar si el email ya existe
+            var emailExists = await _context.Usuario.AnyAsync(u => u.Email.ToLower() == dto.Email);
+            if (emailExists)
+            {
+                return BadRequest("Ya existe un usuario con ese email.");
+            }
+
+            // Validar si el documento ya existe
+            var docExists = await _context.Usuario.AnyAsync(u => u.Documento == dto.Documento);
+            if (docExists)
+            {
+                return BadRequest("Ya existe un usuario con ese documento.");
+            }
+
             // Validar si el rol existe y está activo
             var rol = await _context.Roles
                 .Where(r => r.IdRol == dto.FkRol && r.Activo == true)
@@ -85,13 +102,13 @@ namespace backend.Controllers
                 Documento = dto.Documento,
                 Nombre = dto.Nombre,
                 Celular = dto.Celular,
-                Email = dto.Email,
+                Email = dto.Email, // guardamos en minúsculas
                 Direccion = dto.Direccion,
                 FkRol = dto.FkRol,
-                Estado = true, // siempre se crea activo
+                Estado = true,
                 Contrasena = dto.Contrasena != null
                     ? BCrypt.Net.BCrypt.HashPassword(dto.Contrasena)
-                    : BCrypt.Net.BCrypt.HashPassword("123456") // default
+                    : BCrypt.Net.BCrypt.HashPassword("123456")
             };
 
             _context.Usuario.Add(usuario);
@@ -110,13 +127,30 @@ namespace backend.Controllers
             return CreatedAtAction(nameof(GetUsuario), new { id = usuario.IdUsuario }, result);
         }
 
+
         // PUT: /usuarios/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUsuario(int id, [FromBody] UsuarioCreateOrUpdateDto dto)
         {
+            dto.Email = dto.Email.Trim().ToLower(); // Normalizamos
+
             var usuario = await _context.Usuario.FindAsync(id);
             if (usuario == null)
                 return NotFound();
+
+            // Validar que no haya otro usuario con el mismo email
+            var emailExists = await _context.Usuario.AnyAsync(u => u.Email.ToLower() == dto.Email && u.IdUsuario != id);
+            if (emailExists)
+            {
+                return BadRequest("Ya existe otro usuario con ese email.");
+            }
+
+            // Validar que no haya otro usuario con el mismo documento
+            var docExists = await _context.Usuario.AnyAsync(u => u.Documento == dto.Documento && u.IdUsuario != id);
+            if (docExists)
+            {
+                return BadRequest("Ya existe otro usuario con ese documento.");
+            }
 
             // Validar rol (activo)
             var rol = await _context.Roles
@@ -132,7 +166,7 @@ namespace backend.Controllers
             usuario.Documento = dto.Documento;
             usuario.Nombre = dto.Nombre;
             usuario.Celular = dto.Celular;
-            usuario.Email = dto.Email;
+            usuario.Email = dto.Email; // siempre guardamos en minúsculas
             usuario.Direccion = dto.Direccion;
             usuario.FkRol = dto.FkRol;
 
@@ -145,6 +179,8 @@ namespace backend.Controllers
 
             return NoContent();
         }
+        // PATCH: /usuarios/{id}/estado
+
 
         [HttpPatch("{id}/estado")]
         public async Task<IActionResult> CambiarEstadoUsuario(int id, [FromBody] bool estado)
