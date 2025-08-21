@@ -29,5 +29,5 @@ public partial class Usuario
 
     public bool Estado { get; set; }
     
-        public virtual Role FkRolNavigation { get; set; } = null!;
+    public virtual Role FkRolNavigation { get; set; } = null!;
 }
