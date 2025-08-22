@@ -43,6 +43,12 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<Role>> PostRole([FromBody] RoleCreateDto roleDto)
         {
+            // 🔹 Validación de nombre duplicado
+            bool existeNombre = await _context.Roles
+                .AnyAsync(r => r.NombreRol.ToLower() == roleDto.NombreRol.ToLower());
+            if (existeNombre)
+                return BadRequest("Ya existe un rol con ese nombre.");
+
             var role = new Role
             {
                 NombreRol = roleDto.NombreRol,
@@ -53,7 +59,7 @@ namespace backend.Controllers
             _context.Roles.Add(role);
             await _context.SaveChangesAsync();
 
-            // Guardar permisos relacionados (creamos entradas en Permisoxrol)
+            // Guardar permisos relacionados
             foreach (var permisoId in roleDto.PermisosIds)
             {
                 _context.Permisoxrols.Add(new Permisoxrol
@@ -70,24 +76,25 @@ namespace backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRole(int id, [FromBody] RoleCreateDto roleDto)
         {
-            if (id != roleDto.IdRol) // Si decides agregar IdRol en el DTO para PUT, o pásalo como parámetro separado
+            if (id != roleDto.IdRol)
                 return BadRequest("El ID del rol no coincide.");
+
+            // 🔹 Validación de nombre duplicado, excluyendo el rol actual
+            bool existeNombre = await _context.Roles
+                .AnyAsync(r => r.NombreRol.ToLower() == roleDto.NombreRol.ToLower() && r.IdRol != id);
+            if (existeNombre)
+                return BadRequest("Ya existe otro rol con ese nombre.");
 
             var role = await _context.Roles.Include(r => r.Permisoxrols).FirstOrDefaultAsync(r => r.IdRol == id);
             if (role == null)
                 return NotFound();
 
-            // Actualizar campos simples
             role.NombreRol = roleDto.NombreRol;
             role.Descripcion = roleDto.Descripcion;
             role.Activo = roleDto.Activo;
 
-            // Actualizar permisos relacionados
-
-            // 1. Eliminar permisos anteriores
             _context.Permisoxrols.RemoveRange(role.Permisoxrols);
 
-            // 2. Agregar nuevos permisos
             if (roleDto.PermisosIds != null && roleDto.PermisosIds.Any())
             {
                 foreach (var permisoId in roleDto.PermisosIds)
@@ -114,6 +121,7 @@ namespace backend.Controllers
 
             return NoContent();
         }
+
 
         // PATCH: api/Roles/CambiarEstado/5?activo=true
         [HttpPatch("CambiarEstado/{id}")]
