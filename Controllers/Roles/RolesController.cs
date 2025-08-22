@@ -41,109 +41,99 @@ namespace backend.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Role>> PostRole([FromBody] RoleCreateDto roleDto)
+public async Task<ActionResult<Role>> PostRole([FromBody] RoleCreateDto roleDto)
+{
+    // 🔹 Validación de nombre duplicado
+    bool existeNombre = await _context.Roles
+        .AnyAsync(r => r.NombreRol.ToLower() == roleDto.NombreRol.ToLower());
+    if (existeNombre)
+        return BadRequest("Ya existe un rol con ese nombre.");
+
+    // 🔹 Validación de permisos duplicados
+    var rolesExistentes = await _context.Roles
+        .Include(r => r.Permisoxrols)
+        .ToListAsync();
+
+    foreach (var rol in rolesExistentes)
+    {
+        var permisosRol = rol.Permisoxrols.Select(p => p.FkPermiso).OrderBy(p => p).ToList();
+        var permisosNuevoRol = roleDto.PermisosIds.OrderBy(p => p).ToList();
+        if (permisosRol.SequenceEqual(permisosNuevoRol))
+            return BadRequest("Ya existe un rol con esos mismos permisos.");
+    }
+
+    // Crear rol
+    var role = new Role
+    {
+        NombreRol = roleDto.NombreRol,
+        Descripcion = roleDto.Descripcion,
+        Activo = roleDto.Activo
+    };
+
+    _context.Roles.Add(role);
+    await _context.SaveChangesAsync();
+
+    // Guardar permisos
+    foreach (var permisoId in roleDto.PermisosIds)
+    {
+        _context.Permisoxrols.Add(new Permisoxrol
         {
-            // 🔹 Validación de nombre duplicado
-            bool existeNombre = await _context.Roles
-                .AnyAsync(r => r.NombreRol.ToLower() == roleDto.NombreRol.ToLower());
-            if (existeNombre)
-                return BadRequest("Ya existe un rol con ese nombre.");
+            FkRol = role.IdRol,
+            FkPermiso = permisoId
+        });
+    }
+    await _context.SaveChangesAsync();
 
-            // 🔹 Validación de permisos duplicados
-            var todosLosRoles = await _context.Roles
-                .Include(r => r.Permisoxrols)
-                .ToListAsync();
+    return CreatedAtAction(nameof(GetRole), new { id = role.IdRol }, role);
+}
 
-            foreach (var rol in todosLosRoles)
-            {
-                var permisosRolExistente = rol.Permisoxrols.Select(pr => pr.FkPermiso).OrderBy(p => p).ToList();
-                var permisosNuevos = roleDto.PermisosIds.OrderBy(p => p).ToList();
+[HttpPut("{id}")]
+public async Task<IActionResult> PutRole(int id, [FromBody] RoleCreateDto roleDto)
+{
+    if (id != roleDto.IdRol)
+        return BadRequest("El ID del rol no coincide.");
 
-                if (permisosRolExistente.SequenceEqual(permisosNuevos))
-                {
-                    return BadRequest($"Ya existe un rol ('{rol.NombreRol}') con los mismos permisos.");
-                }
-            }
+    // Validación nombre duplicado
+    bool existeNombre = await _context.Roles
+        .AnyAsync(r => r.NombreRol.ToLower() == roleDto.NombreRol.ToLower() && r.IdRol != id);
+    if (existeNombre)
+        return BadRequest("Ya existe otro rol con ese nombre.");
 
-            var role = new Role
-            {
-                NombreRol = roleDto.NombreRol,
-                Descripcion = roleDto.Descripcion,
-                Activo = roleDto.Activo
-            };
+    // Validación permisos duplicados
+    var rolesExistentes = await _context.Roles
+        .Include(r => r.Permisoxrols)
+        .Where(r => r.IdRol != id)
+        .ToListAsync();
 
-            _context.Roles.Add(role);
-            await _context.SaveChangesAsync();
+    foreach (var rol in rolesExistentes)
+    {
+        var permisosRol = rol.Permisoxrols.Select(p => p.FkPermiso).OrderBy(p => p).ToList();
+        var permisosActuales = roleDto.PermisosIds.OrderBy(p => p).ToList();
+        if (permisosRol.SequenceEqual(permisosActuales))
+            return BadRequest("Ya existe otro rol con esos mismos permisos.");
+    }
 
-            // Guardar permisos relacionados
-            foreach (var permisoId in roleDto.PermisosIds)
-            {
-                _context.Permisoxrols.Add(new Permisoxrol
-                {
-                    FkRol = role.IdRol,
-                    FkPermiso = permisoId
-                });
-            }
-            await _context.SaveChangesAsync();
+    var role = await _context.Roles.Include(r => r.Permisoxrols).FirstOrDefaultAsync(r => r.IdRol == id);
+    if (role == null) return NotFound();
 
-            return CreatedAtAction(nameof(GetRole), new { id = role.IdRol }, role);
-        }
+    role.NombreRol = roleDto.NombreRol;
+    role.Descripcion = roleDto.Descripcion;
+    role.Activo = roleDto.Activo;
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutRole(int id, [FromBody] RoleCreateDto roleDto)
+    _context.Permisoxrols.RemoveRange(role.Permisoxrols);
+    foreach (var permisoId in roleDto.PermisosIds)
+    {
+        _context.Permisoxrols.Add(new Permisoxrol
         {
-            if (id != roleDto.IdRol)
-                return BadRequest("El ID del rol no coincide.");
+            FkRol = role.IdRol,
+            FkPermiso = permisoId
+        });
+    }
 
-            // 🔹 Validación de nombre duplicado
-            bool existeNombre = await _context.Roles
-                .AnyAsync(r => r.NombreRol.ToLower() == roleDto.NombreRol.ToLower() && r.IdRol != id);
-            if (existeNombre)
-                return BadRequest("Ya existe otro rol con ese nombre.");
+    await _context.SaveChangesAsync();
+    return NoContent();
+}
 
-            // 🔹 Validación de permisos duplicados
-            var otrosRoles = await _context.Roles
-                .Include(r => r.Permisoxrols)
-                .Where(r => r.IdRol != id)
-                .ToListAsync();
-
-            foreach (var rol in otrosRoles)
-            {
-                var permisosRolExistente = rol.Permisoxrols.Select(pr => pr.FkPermiso).OrderBy(p => p).ToList();
-                var permisosActualizados = roleDto.PermisosIds.OrderBy(p => p).ToList();
-
-                if (permisosRolExistente.SequenceEqual(permisosActualizados))
-                {
-                    return BadRequest($"Ya existe otro rol ('{rol.NombreRol}') con los mismos permisos.");
-                }
-            }
-
-            var role = await _context.Roles.Include(r => r.Permisoxrols).FirstOrDefaultAsync(r => r.IdRol == id);
-            if (role == null)
-                return NotFound();
-
-            role.NombreRol = roleDto.NombreRol;
-            role.Descripcion = roleDto.Descripcion;
-            role.Activo = roleDto.Activo;
-
-            _context.Permisoxrols.RemoveRange(role.Permisoxrols);
-
-            if (roleDto.PermisosIds != null && roleDto.PermisosIds.Any())
-            {
-                foreach (var permisoId in roleDto.PermisosIds)
-                {
-                    _context.Permisoxrols.Add(new Permisoxrol
-                    {
-                        FkRol = role.IdRol,
-                        FkPermiso = permisoId
-                    });
-                }
-            }
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
 
 
 
