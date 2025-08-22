@@ -49,6 +49,22 @@ namespace backend.Controllers
             if (existeNombre)
                 return BadRequest("Ya existe un rol con ese nombre.");
 
+            // 🔹 Validación de permisos duplicados
+            var todosLosRoles = await _context.Roles
+                .Include(r => r.Permisoxrols)
+                .ToListAsync();
+
+            foreach (var rol in todosLosRoles)
+            {
+                var permisosRolExistente = rol.Permisoxrols.Select(pr => pr.FkPermiso).OrderBy(p => p).ToList();
+                var permisosNuevos = roleDto.PermisosIds.OrderBy(p => p).ToList();
+
+                if (permisosRolExistente.SequenceEqual(permisosNuevos))
+                {
+                    return BadRequest($"Ya existe un rol ('{rol.NombreRol}') con los mismos permisos.");
+                }
+            }
+
             var role = new Role
             {
                 NombreRol = roleDto.NombreRol,
@@ -79,11 +95,28 @@ namespace backend.Controllers
             if (id != roleDto.IdRol)
                 return BadRequest("El ID del rol no coincide.");
 
-            // 🔹 Validación de nombre duplicado, excluyendo el rol actual
+            // 🔹 Validación de nombre duplicado
             bool existeNombre = await _context.Roles
                 .AnyAsync(r => r.NombreRol.ToLower() == roleDto.NombreRol.ToLower() && r.IdRol != id);
             if (existeNombre)
                 return BadRequest("Ya existe otro rol con ese nombre.");
+
+            // 🔹 Validación de permisos duplicados
+            var otrosRoles = await _context.Roles
+                .Include(r => r.Permisoxrols)
+                .Where(r => r.IdRol != id)
+                .ToListAsync();
+
+            foreach (var rol in otrosRoles)
+            {
+                var permisosRolExistente = rol.Permisoxrols.Select(pr => pr.FkPermiso).OrderBy(p => p).ToList();
+                var permisosActualizados = roleDto.PermisosIds.OrderBy(p => p).ToList();
+
+                if (permisosRolExistente.SequenceEqual(permisosActualizados))
+                {
+                    return BadRequest($"Ya existe otro rol ('{rol.NombreRol}') con los mismos permisos.");
+                }
+            }
 
             var role = await _context.Roles.Include(r => r.Permisoxrols).FirstOrDefaultAsync(r => r.IdRol == id);
             if (role == null)
@@ -107,20 +140,11 @@ namespace backend.Controllers
                 }
             }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RoleExists(id))
-                    return NotFound();
-                else
-                    throw;
-            }
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
 
         // PATCH: api/Roles/CambiarEstado/5?activo=true
