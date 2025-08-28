@@ -23,7 +23,7 @@ namespace backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var usuario = await _context.Usuario
+            var usuario = await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Email == request.Email);
 
             if (usuario == null)
@@ -57,7 +57,7 @@ namespace backend.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
-            var usuario = await _context.Usuario.FirstOrDefaultAsync(u => u.Email == request.Email);
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == request.Email);
 
             // Mensaje genérico por seguridad
             if (usuario == null)
@@ -78,7 +78,7 @@ namespace backend.Controllers
         [HttpPost("verify-code")]
         public async Task<IActionResult> VerifyCode([FromBody] VerifyCodeRequest request)
         {
-            var usuario = await _context.Usuario.FirstOrDefaultAsync(u => u.Email == request.Email);
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == request.Email);
 
             if (usuario == null)
                 return Unauthorized(new { message = "Código inválido o expirado." });
@@ -96,7 +96,7 @@ namespace backend.Controllers
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
-            var usuario = await _context.Usuario.FirstOrDefaultAsync(u => u.Email == request.Email);
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == request.Email);
 
             if (usuario == null)
                 return Unauthorized(new { message = "Usuario no encontrado." });
