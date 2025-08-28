@@ -1,9 +1,9 @@
-    using backend.Models;
-    using Microsoft.EntityFrameworkCore;
-    using backend.Services;
-    using backend.Configurations;
+using Microsoft.EntityFrameworkCore;
+using backend.Services;
+using backend.Configurations;
+using backend.Models;
 
-    namespace backend
+namespace backend
     {
         public class Program
         {

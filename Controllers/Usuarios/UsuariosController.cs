@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using backend.DTOs;
 using backend.Models;
+using backend.Data;
 
 namespace backend.Controllers
 {
@@ -20,7 +21,7 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetUsuarios()
         {
-            var usuarios = await _context.Usuario
+            var usuarios = await _context.Usuarios
                 .Include(u => u.FkRolNavigation)
                 .Select(u => new UsuarioDto
                 {
@@ -43,7 +44,7 @@ namespace backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<UsuarioDto>> GetUsuario(int id)
         {
-            var usuario = await _context.Usuario
+            var usuario = await _context.Usuarios
                 .Include(u => u.FkRolNavigation)
                 .Where(u => u.IdUsuario == id)
                 .Select(u => new UsuarioDto
@@ -73,14 +74,14 @@ namespace backend.Controllers
             dto.Email = dto.Email.Trim().ToLower(); // Normalizamos
 
             // Validar si el email ya existe
-            var emailExists = await _context.Usuario.AnyAsync(u => u.Email.ToLower() == dto.Email);
+            var emailExists = await _context.Usuarios.AnyAsync(u => u.Email.ToLower() == dto.Email);
             if (emailExists)
             {
                 return BadRequest("Ya existe un usuario con ese email.");
             }
 
             // Validar si el documento ya existe
-            var docExists = await _context.Usuario.AnyAsync(u => u.Documento == dto.Documento);
+            var docExists = await _context.Usuarios.AnyAsync(u => u.Documento == dto.Documento);
             if (docExists)
             {
                 return BadRequest("Ya existe un usuario con ese documento.");
@@ -111,7 +112,7 @@ namespace backend.Controllers
                     : BCrypt.Net.BCrypt.HashPassword("123456")
             };
 
-            _context.Usuario.Add(usuario);
+            _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
 
             var result = new UsuarioDto
@@ -134,19 +135,19 @@ namespace backend.Controllers
         {
             dto.Email = dto.Email.Trim().ToLower(); // Normalizamos
 
-            var usuario = await _context.Usuario.FindAsync(id);
+            var usuario = await _context.Usuarios.FindAsync(id);
             if (usuario == null)
                 return NotFound();
 
             // Validar que no haya otro usuario con el mismo email
-            var emailExists = await _context.Usuario.AnyAsync(u => u.Email.ToLower() == dto.Email && u.IdUsuario != id);
+            var emailExists = await _context.Usuarios.AnyAsync(u => u.Email.ToLower() == dto.Email && u.IdUsuario != id);
             if (emailExists)
             {
                 return BadRequest("Ya existe otro usuario con ese email.");
             }
 
             // Validar que no haya otro usuario con el mismo documento
-            var docExists = await _context.Usuario.AnyAsync(u => u.Documento == dto.Documento && u.IdUsuario != id);
+            var docExists = await _context.Usuarios.AnyAsync(u => u.Documento == dto.Documento && u.IdUsuario != id);
             if (docExists)
             {
                 return BadRequest("Ya existe otro usuario con ese documento.");
@@ -185,7 +186,7 @@ namespace backend.Controllers
         [HttpPatch("{id}/estado")]
         public async Task<IActionResult> CambiarEstadoUsuario(int id, [FromBody] bool estado)
         {
-            var usuario = await _context.Usuario.FindAsync(id);
+            var usuario = await _context.Usuarios.FindAsync(id);
             if (usuario == null)
                 return NotFound();
 
@@ -199,11 +200,11 @@ namespace backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUsuario(int id)
         {
-            var usuario = await _context.Usuario.FindAsync(id);
+            var usuario = await _context.Usuarios.FindAsync(id);
             if (usuario == null)
                 return NotFound();
 
-            _context.Usuario.Remove(usuario);
+            _context.Usuarios.Remove(usuario);
             await _context.SaveChangesAsync();
 
             return NoContent();

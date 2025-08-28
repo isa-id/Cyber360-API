@@ -5,21 +5,25 @@ namespace backend.Models;
 
 public partial class Proveedore
 {
-    public int IdProveedor { get; set; }
+    public int Id { get; set; }
 
-    public string Documento { get; set; } = null!;
+    public string? TipoPersona { get; set; }
 
-    public string TipoDocumento { get; set; } = null!;
+    public string? NumeroDocumento { get; set; }
 
-    public string NombreRa { get; set; } = null!;
+    public string? TipoDocumento { get; set; }
 
-    public string Correo { get; set; } = null!;
+    public string? Nombres { get; set; }
 
-    public string Direccion { get; set; } = null!;
+    public string? Apellidos { get; set; }
 
-    public string Contacto { get; set; } = null!;
+    public string? RazonSocial { get; set; }
 
-    public bool Estado { get; set; }
+    public string? Correo { get; set; }
+
+    public string? Direccion { get; set; }
+
+    public string? Telefono { get; set; }
 
     public virtual ICollection<Compra> Compras { get; set; } = new List<Compra>();
 }

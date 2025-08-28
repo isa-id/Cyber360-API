@@ -5,27 +5,23 @@ namespace backend.Models;
 
 public partial class Cliente
 {
-    public int IdCliente { get; set; }
+    public int Id { get; set; }
 
-    public string NombreCompleto { get; set; } = null!;
+    public string? Nombre { get; set; }
 
-    public string TipoDocumento { get; set; } = null!;
+    public string? Apellido { get; set; }
 
-    public string Documento { get; set; } = null!;
+    public string? TipoDoc { get; set; }
 
-    public DateOnly FechaNacimiento { get; set; }
+    public int? Documento { get; set; }
 
-    public string Celular { get; set; } = null!;
+    public string? Correo { get; set; }
 
-    public string Direccion { get; set; } = null!;
+    public bool? Estado { get; set; }
 
-    public string Correo { get; set; } = null!;
+    public virtual Fidelizacion? Fidelizacion { get; set; }
 
-    public DateTime Tiempo { get; set; }
-
-    public int Fichos { get; set; }
-
-    public virtual ICollection<Reparacione> Reparaciones { get; set; } = new List<Reparacione>();
+    public virtual ICollection<Reparacion> Reparacions { get; set; } = new List<Reparacion>();
 
     public virtual ICollection<Venta> Venta { get; set; } = new List<Venta>();
 }

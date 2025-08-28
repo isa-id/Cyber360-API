@@ -5,27 +5,17 @@ namespace backend.Models;
 
 public partial class Servicio
 {
-    public int IdServicio { get; set; }
+    public int Id { get; set; }
 
-    public string NombreServicio { get; set; } = null!;
+    public string? Nombre { get; set; }
 
-    public decimal Precio { get; set; }
+    public decimal? Precio { get; set; }
 
-    public string Detalles { get; set; } = null!;
+    public string? Detalles { get; set; }
 
-    public int? FkCategoriaServicio { get; set; }
+    public int? CategoriaId { get; set; }
 
-    public int? FkImagen { get; set; } 
-
-    public int? FkEquipo { get; set; } 
-
-    public virtual CategoriaServicio? FkCategoriaServicioNavigation { get; set; } 
-
-    public virtual Equipo? FkEquipoNavigation { get; set; } 
-
-    public virtual ImagenesServicio? FkImagenNavigation { get; set; } 
-
-    public virtual ICollection<Servicioxinsumo> Servicioxinsumos { get; set; } = new List<Servicioxinsumo>();
+    public virtual Categoria? Categoria { get; set; }
 
     public virtual ICollection<Servicioxventum> Servicioxventa { get; set; } = new List<Servicioxventum>();
 }

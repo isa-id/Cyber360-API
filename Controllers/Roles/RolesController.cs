@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
 using Cyber360.DTOs;
+using backend.Data;
 
 namespace backend.Controllers
 {
