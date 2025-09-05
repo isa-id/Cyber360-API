@@ -30,59 +30,79 @@ namespace backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Email == request.Email);
-
-            if (usuario == null)
-                return Unauthorized(new { message = "Correo o contraseña incorrectos." });
-
-            var hash = usuario.Contrasena;
-            bool contraseñaValida;
-
-            if (hash.StartsWith("$2a$") || hash.StartsWith("$2b$") || hash.StartsWith("$2y$"))
+            try
             {
-                contraseñaValida = BCrypt.Net.BCrypt.Verify(request.Contrasena, hash);
-            }
-            else
-            {
-                contraseñaValida = request.Contrasena == hash;
-            }
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            if (!contraseñaValida)
-                return Unauthorized(new { message = "Correo o contraseña incorrectos." });
+                if (usuario == null)
+                    return Unauthorized(new { message = "Correo o contraseña incorrectos." });
 
-            // 🔑 Generar el token JWT
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
+                var hash = usuario.Contrasena;
+                bool contraseñaValida;
 
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
+                if (hash.StartsWith("$2a$") || hash.StartsWith("$2b$") || hash.StartsWith("$2y$"))
                 {
-                    new Claim("idUsuario", usuario.IdUsuario.ToString()),
-                    new Claim("nombre", usuario.Nombre),
-                    new Claim("email", usuario.Email),
-                    new Claim("rol", usuario.FkRol.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddHours(3),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature
-                )
-            };
+                    contraseñaValida = BCrypt.Net.BCrypt.Verify(request.Contrasena, hash);
+                }
+                else
+                {
+                    contraseñaValida = request.Contrasena == hash;
+                }
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
+                if (!contraseñaValida)
+                    return Unauthorized(new { message = "Correo o contraseña incorrectos." });
 
-            return Ok(new
+                // 🔑 Validar que la clave JWT exista
+                var jwtKey = _config["Jwt:Key"];
+                if (string.IsNullOrEmpty(jwtKey))
+                {
+                    return StatusCode(500, new { message = "Error interno: JWT Key no configurada en el servidor." });
+                }
+
+                // 🔑 Generar el token JWT
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes(jwtKey);
+
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                new Claim("idUsuario", usuario.IdUsuario.ToString()),
+                new Claim("nombre", usuario.Nombre),
+                new Claim("email", usuario.Email),
+                new Claim("rol", usuario.FkRol.ToString())
+            }),
+                    Expires = DateTime.UtcNow.AddHours(3),
+                    SigningCredentials = new SigningCredentials(
+                        new SymmetricSecurityKey(key),
+                        SecurityAlgorithms.HmacSha256Signature
+                    )
+                };
+
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+
+                return Ok(new
+                {
+                    message = "Inicio de sesión exitoso",
+                    usuario.IdUsuario,
+                    usuario.Nombre,
+                    usuario.Email,
+                    usuario.FkRol,
+                    token = tokenHandler.WriteToken(token)
+                });
+            }
+            catch (Exception ex)
             {
-                message = "Inicio de sesión exitoso",
-                usuario.IdUsuario,
-                usuario.Nombre,
-                usuario.Email,
-                usuario.FkRol,
-                token = tokenHandler.WriteToken(token)
-            });
+                // ⚠️ Devuelve un 500 con detalles básicos (sin exponer info sensible)
+                return StatusCode(500, new
+                {
+                    message = "Error interno en el servidor.",
+                    error = ex.Message
+                });
+            }
         }
+
 
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
