@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
+using backend.Models.Compras;
+using backend.Models.Ventas;
 
 namespace backend.Data;
 

@@ -1,5 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using backend.Models;
 using backend.Services;
 using Cyber360.DTOs;
@@ -13,11 +17,13 @@ namespace backend.Controllers
     {
         private readonly NeondbContext _context;
         private readonly IMailService _mailService;
+        private readonly IConfiguration _config;
 
-        public AuthController(NeondbContext context, IMailService mailService)
+        public AuthController(NeondbContext context, IMailService mailService, IConfiguration config)
         {
             _context = context;
             _mailService = mailService;
+            _config = config;
         }
 
         [HttpPost("login")]
@@ -44,13 +50,36 @@ namespace backend.Controllers
             if (!contraseñaValida)
                 return Unauthorized(new { message = "Correo o contraseña incorrectos." });
 
+            // 🔑 Generar el token JWT
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim("idUsuario", usuario.IdUsuario.ToString()),
+                    new Claim("nombre", usuario.Nombre),
+                    new Claim("email", usuario.Email),
+                    new Claim("rol", usuario.FkRol.ToString())
+                }),
+                Expires = DateTime.UtcNow.AddHours(3),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature
+                )
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
             return Ok(new
             {
                 message = "Inicio de sesión exitoso",
                 usuario.IdUsuario,
                 usuario.Nombre,
                 usuario.Email,
-                usuario.FkRol
+                usuario.FkRol,
+                token = tokenHandler.WriteToken(token)
             });
         }
 
@@ -59,11 +88,9 @@ namespace backend.Controllers
         {
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            // Mensaje genérico por seguridad
             if (usuario == null)
                 return Ok(new { message = "Si el correo está registrado, se enviará un código." });
 
-            // Generar código de 6 dígitos
             var codigo = new Random().Next(100000, 999999).ToString();
 
             usuario.CodigoRecuperacion = codigo;
@@ -106,11 +133,8 @@ namespace backend.Controllers
             if (usuario.CodigoExpira == null || ahora > usuario.CodigoExpira)
                 return Unauthorized(new { message = "El código ya expiró." });
 
-            // Hashear la nueva contraseña
             var hash = BCrypt.Net.BCrypt.HashPassword(request.NuevaContrasena);
             usuario.Contrasena = hash;
-
-            // Limpiar el código y expiración
             usuario.CodigoRecuperacion = null;
             usuario.CodigoExpira = null;
 
@@ -118,6 +142,5 @@ namespace backend.Controllers
 
             return Ok(new { message = "Contraseña restablecida exitosamente." });
         }
-
     }
 }
